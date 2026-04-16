@@ -893,19 +893,23 @@ class SmaliField(SmaliPiece):
         modifiers_str = (' '.join(self.details.modifiers) if self.details.modifiers is not None else '') + (' ' if len(self.details.modifiers) > 0 else '')
         return f'.field {modifiers_str}{self.details.name}:{self.details.type}{value_str}'
 
-def replace_file(dst, perms = 0o644, owner = "root:root", secontext = "u:object_r:system_file:s0", src = None):
-    logging.info(f"Replacing {dst}...")
+def replace_file(dst, perms = 0o644, owner = "root:root", secontext = "u:object_r:system_file:s0", src = None, replace = False):
+    logging.info(f"Trying to replace {dst}...")
     if src is None:
         _, file_name = os.path.split(dst)
         src = f"../{file_name}"
 
     if not os.path.isfile(src):
-        logging.warning(f"Replacement file {src} doesn't exist. Skipping.")
+        logging.warning(f"Input file {src} wasn't found")
         return False
 
     if os.path.isfile(dst):
-        logging.info(f"Removing old file.")
-        os.remove(dst)
+        if not replace:
+            logging.info("File already exists, skipping.")
+            return True
+        else:
+            logging.info(f"File already exists, removing old file.")
+            os.remove(dst)
 
     shutil.copy(src, dst)
     os.chmod(dst, perms)

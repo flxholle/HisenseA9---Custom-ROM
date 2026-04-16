@@ -1072,7 +1072,7 @@ def patch_services_jar():
                 ],
             )
         ]
-    ).patch(api = 29)
+    ).patch(api = api_level)
 
 def patch_systemui():
     values_per_scrim_enum = {
@@ -1374,7 +1374,7 @@ def patch_systemui():
                 ]
             ),
         ]
-    ).patch(install = ["d/system/system_ext/priv-app/SystemUI/SystemUI.apk"], sign = True, api = 29)
+    ).patch(install = ["d/system/system_ext/priv-app/SystemUI/SystemUI.apk"], sign = True, api = api_level)
 
 def patch_AddTintToCall():
     namespaces = {
@@ -1412,7 +1412,7 @@ def patch_CallUI():
         [
             FunctionPatch(action=patch_AddTintToCall)
         ]
-    ).patch(sign = True, use_res = True, use_src = False, api = 29)
+    ).patch(sign = True, use_res = True, use_src = False, api = api_level)
 
 def update_build_prop():
     properties = {
@@ -1440,6 +1440,8 @@ def update_build_prop():
         "sys.disable_ext_animation": "1",
         # Recent apps
         "ro.recents.grid": "true",
+        #TODO doesnt work
+        "debug.sf.disable_hwc": "1"
     }
     logging.info("Updating build.prop...")
     with open("d/system/build.prop", "r") as file:
@@ -1509,10 +1511,16 @@ def update_vndk_rc():
             file.write("    write /sys/class/backlight/ktd3137-bl-4/brightness ${sys.linevibrator_short}\n")
             file.write("    write /sys/class/backlight/aw99703-bl-2/brightness ${sys.linevibrator_short}\n\n")
 
+
+global api_level
+
 def main():
     if len(sys.argv) != 2:
         logging.error("Usage: sudo python patch_system_img.py [/path/to/system.img]")
         exit_now(1)
+    
+    global api_level 
+    api_level = 36
 
     src_file = os.path.abspath(sys.argv[1])
     if not os.path.exists(src_file):
@@ -1534,19 +1542,22 @@ def main():
         replace_file("d/system/product/overlay/treble-overlay-Hisense-HLTE556N.apk")
         replace_file("d/system/bin/a9_eink_server", perms = 0o755, owner = "root:2000", secontext = "u:object_r:phhsu_exec:s0")
         replace_file("d/system/priv-app/a9service.apk")
+        replace_file("d/system/etc/permissions/privapp-permissions-a9service.xml")
         replace_file("d/system/priv-app/org.fdroid.fdroid.privileged.apk")
         replace_file("d/system/priv-app/com.google.android.gms.apk")
         replace_file("d/system/priv-app/com.android.vending.apk")
         replace_file("d/system/app/F-Droid.apk")
         replace_file("d/system/app/ims-caf-u.apk")
         replace_file("d/system/etc/hosts")
+        # replace_file("d/system/priv-app/ferreira_app.apk")
+        # replace_file("d/system/etc/permissions/privapp-permissions-ferreira.xml")
         update_build_prop()
         try:
-            patch_CallUI()
+            # patch_CallUI()
             pass
         except subprocess.CalledProcessError:
             logging.warning('Dialer app patching error, skipping.')
-        patch_systemui()
+        # patch_systemui()
         patch_services_jar()
         update_vndk_rc()
 
