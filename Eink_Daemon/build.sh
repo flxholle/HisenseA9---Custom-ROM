@@ -5,6 +5,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$SCRIPT_DIR"
 JNI_DIR="$PROJECT_DIR/jni"
 OUTPUT_BINARY="a9_eink_server"
+TARGET_ABI="arm64-v8a"
+TARGET_API="android-36"
 
 # --- Determine NDK path ---
 if [ -n "$1" ]; then
@@ -52,6 +54,16 @@ fi
 if [ ! -f "$JNI_DIR/eink_daemon.c" ]; then
     echo "Error: eink_daemon.c not found in $JNI_DIR"
     exit 1
+fi
+
+# --- Create Application.mk if it doesn't exist ---
+APP_MK="$JNI_DIR/Application.mk"
+if [ ! -f "$APP_MK" ]; then
+    echo "Creating Application.mk..."
+    cat > "$APP_MK" <<EOF
+APP_ABI := $TARGET_ABI
+APP_PLATFORM := $TARGET_API
+EOF
 fi
 
 # --- Clean previous build ---

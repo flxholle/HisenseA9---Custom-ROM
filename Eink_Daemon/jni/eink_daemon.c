@@ -322,10 +322,11 @@ _Noreturn void setupServer() {
             ssize_t num_read = read(client_sockfd, buffer, BUFFER_SIZE - 1);
             if (num_read > 0) {
                 buffer[num_read] = '\0';
-                char* cmd = strtok(buffer, "\n");
+                char *saveptr = NULL;
+                char *cmd = strtok_r(buffer, "\n", &saveptr);
                 while (cmd != NULL) {
                     processCommand(cmd);
-                    cmd = strtok(NULL, "\n");
+                    cmd = strtok_r(NULL, "\n", &saveptr);
                 }
             } else if (num_read == 0) {
                 LOGI("Client disconnected");
